@@ -3,9 +3,7 @@ import type { EngineInterface, HookStream, ProcessSpawnChunk, ProcessSpawnResult
 const PANE = 'live-browser'
 const KEY = 'view'
 const STEPS_KEY = 'steps'
-const SHOTS = '/home/andg/Dev/scratch/odoo-shots'
-const TARGET = ['/usr/bin/python3', '-I', `${SHOTS}/target.py`]
-const LIVE = ['/home/andg/.local/bin/uv', 'run', '-q', '--no-config', '--no-project', '--with', 'playwright', 'python', '-I', `${SHOTS}/live.py`, 'serve']
+const LIVE = ['uv', 'run', '-q', '--no-config', '--no-project', '--with', 'playwright', 'python', '-I']
 const OUT = '/tmp/odoo-live'
 const ASPECT = 600 / 960
 const COMMAND = '/live-browser '
@@ -242,8 +240,20 @@ async function readOptions($: EngineInterface, own: Run, field: string) {
   redraw($)
 }
 
+let shotsDir: string | undefined
+
+// odoo-shots checkout: $ODOO_SHOTS, else ~/Dev/scratch/odoo-shots
+async function shots($: EngineInterface) {
+  shotsDir ??= (await $.env.get('ODOO_SHOTS')) ?? `${(await $.env.get('HOME')) ?? ''}/Dev/scratch/odoo-shots`
+  return shotsDir
+}
+
+async function target($: EngineInterface, args: string[]) {
+  return $.process.run(['python3', '-I', `${await shots($)}/target.py`, ...args])
+}
+
 async function resolveTarget($: EngineInterface, slug: string | undefined): Promise<Target | string> {
-  const result = await $.process.run([...TARGET, '--json', ...(slug ? [slug] : [])])
+  const result = await target($, ['--json', ...(slug ? [slug] : [])])
     .catch((error: unknown) => ({ stdout: '', stderr: String(error) }))
   try {
     const parsed = JSON.parse(result.stdout) as Target | { error: string }
@@ -273,7 +283,7 @@ async function start($: EngineInterface, slug: string | undefined, steps: string
   own.target = found
   own.sock = `${found.sock_dir}/s${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}.sock`
   own.status = 'starting Chrome…'
-  const child = $.process.spawn({ argv: [...LIVE, '--url', found.url, '--db', found.db, '--sock', own.sock] })
+  const child = $.process.spawn({ argv: [...LIVE, `${await shots($)}/live.py`, 'serve', '--url', found.url, '--db', found.db, '--sock', own.sock] })
   own.child = child
   ticker = $.clock.every(1000, () => {
     own.fps = own.windowFrames
@@ -312,7 +322,7 @@ async function start($: EngineInterface, slug: string | undefined, steps: string
 }
 
 async function refresh($: EngineInterface): Promise<Server[] | string> {
-  const result = await $.process.run([...TARGET, '--list', '--json']).catch(() => undefined)
+  const result = await target($, ['--list', '--json']).catch(() => undefined)
   try {
     servers = (JSON.parse(result?.stdout ?? '') as { running: Server[] }).running
     return servers

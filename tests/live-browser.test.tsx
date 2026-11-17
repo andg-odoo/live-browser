@@ -36,6 +36,7 @@ test('a target error is shown and no browser is spawned', async ($, on) => {
   on('ui.open', () => ({ value: { isPlaced: true } }))
   on('ui.invalidate', () => ({ value: undefined }))
   on('process.run', () => ({ value: { exitCode: 2, stdout: '{"error": "no Odoo answering on :8924 (kueski)"}', stderr: '', isStdoutTruncated: false, isStderrTruncated: false } }))
+  on('env.get', () => ({ value: undefined }))
   on('process.spawn', async function* () {
     spawned += 1
     return { value: { code: 0, signal: null } }
@@ -97,6 +98,7 @@ test('status and FRAME lines split across pieces drive the pane, env var and the
 test('list shows the running servers without starting a browser', async ($, on) => {
   let spawned = 0
   on('process.run', () => ({ value: { exitCode: 0, stdout: JSON.stringify({ running: [{ env: 'ecwth20', db: 'oes_ecwth20', port: 8902, root: '/w' }], envs: [] }), stderr: '', isStdoutTruncated: false, isStderrTruncated: false } }))
+  on('env.get', () => ({ value: undefined }))
   on('process.spawn', async function* () {
     spawned += 1
     return { value: { code: 0, signal: null } }
@@ -109,6 +111,7 @@ test('list shows the running servers without starting a browser', async ($, on) 
 test('autocomplete suggests list, cached slugs and step verbs for /live-browser only', async ($, on) => {
   const running = [{ env: 'ecwth20', db: 'oes_ecwth20', port: 8902, root: '/w' }, { env: 'src', db: 'oes_src', port: 8869, root: '/s' }]
   on('process.run', () => ({ value: { exitCode: 0, stdout: JSON.stringify({ running, envs: [] }), stderr: '', isStdoutTruncated: false, isStderrTruncated: false } }))
+  on('env.get', () => ({ value: undefined }))
   on('prompt.autocomplete', () => ({ suggestions: [] }))
   await $.command.run({ command: 'live-browser', args: 'list' } as never)
   const ask = async (text: string) => {

@@ -1,1 +1,11 @@
-{ "name": "live-browser", "version": "1.2.0", "description": "This session's live Odoo browser (odoo-shots live.py serve) in a pane; shoot attaches via $ODOO_LIVE_SOCKET" }
+{
+  "name": "live-browser",
+  "version": "1.2.0",
+  "description": "This session's live Odoo browser (odoo-shots live.py serve) in a pane; shoot attaches via $ODOO_LIVE_SOCKET",
+  "author": {
+    "name": "andg-odoo",
+    "url": "https://github.com/andg-odoo"
+  },
+  "repository": "https://github.com/andg-odoo/live-browser",
+  "license": "MIT"
+}
